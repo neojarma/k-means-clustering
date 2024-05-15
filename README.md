@@ -15,8 +15,8 @@ Follow the steps below to set up the virtual environment, install the necessary 
 First, clone the repository to your local machine. Open your terminal (or Command Prompt on Windows) and run:
 
 ```sh
-git clone https://github.com/yourusername/yourproject.git
-cd yourproject
+git clone https://github.com/neojarma/k-means-clustering.git
+cd k-means-clustering
 ```
 
 ### Step 2: Create Virtual Environment
