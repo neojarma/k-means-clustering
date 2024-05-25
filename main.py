@@ -6,13 +6,12 @@ import pandas as pd
 import matplotlib
 matplotlib.use('SVG')
 
-
 app = Flask(__name__)
 CORS(app)
 
-
 dataset = []
 dataset_labels = []
+label_desa = []
 columns = []
 rows = None
 cluster = None
@@ -25,6 +24,19 @@ def index():
     return render_template('index.html')
 
 
+def convert_to_serializable(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, list):
+        return [convert_to_serializable(i) for i in obj]
+    elif isinstance(obj, np.int64):
+        return int(obj)
+    elif isinstance(obj, np.float64):
+        return float(obj)
+    else:
+        return obj
+
+
 class ClusteringResult():
     def __init__(self) -> None:
         self.iteration = 0
@@ -34,10 +46,10 @@ class ClusteringResult():
 
     def to_dict(self):
         return {
-            'iteration': self.iteration,
-            'centroids': [c.tolist() for c in self.centroids],
-            'euclideans': self.euclideans,
-            'clusters': self.clusters
+            'iteration': int(self.iteration),
+            'centroids': convert_to_serializable(self.centroids),
+            'euclideans': convert_to_serializable(self.euclideans),
+            'clusters': convert_to_serializable(self.clusters)
         }
 
 
@@ -187,19 +199,24 @@ class KMeans():
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
-    global dataset, dataset_labels, columns, rows, kmeans
+    global dataset, dataset_labels, columns, rows, kmeans, label_desa
 
     file = request.files['file']
     rd = pd.read_excel(file)
 
-    dataset = rd.iloc[:, 1:].values
-    dataset_labels = rd.iloc[:, 0].values
+   # Convert all columns except the first one to numerical values, filling non-numeric with NaN and then replacing NaN with 0
+    rd.iloc[:, 2:] = rd.iloc[:, 2:].apply(
+        pd.to_numeric, errors='coerce').fillna(0)
+
+    dataset = rd.iloc[:, 2:].values
+    dataset_labels = rd.iloc[:, 1].values
+    label_desa = rd.iloc[:, 0].values
     columns = rd.columns
     rows = len(dataset)
 
     kmeans = KMeans(dataset, 4, dataset_labels)
 
-    return jsonify({"dataset": dataset.tolist()[:5], "labels": dataset_labels.tolist()[:5], "columns": columns.to_list(), "rows": rows}), 200
+    return jsonify({"dataset": dataset.tolist()[:5], "labels": dataset_labels.tolist()[1:5], "columns": columns.to_list()[1:], "rows": rows}), 200
 
 
 @app.route('/cluster', methods=['POST'])
@@ -246,7 +263,7 @@ def serve_image(filename):
 
 @app.route('/cluster', methods=['GET'])
 def plot_clusters():
-    global kmeans, dataset, dataset_labels, cluster
+    global kmeans, dataset, dataset_labels, cluster, label_desa
     if len(dataset) == 0:
         return jsonify({'message': 'Please upload your dataset first'}), 400
 
@@ -255,7 +272,10 @@ def plot_clusters():
 
     kmeans = KMeans(dataset, cluster, dataset_labels)
     kmeans.lloyds(max_iteration, 42)
-    iterations = [result.to_dict() for result in kmeans.results][-1]
+    iterations = [x.to_dict() for x in kmeans.results][-1]
+
+    for x in range(len(iterations['clusters'])):
+        iterations['clusters'][x].insert(0, label_desa[x])
 
     kmeans.plot_clusters()
     clusterPath = 'http://' + request.host + '/images/cluster.png'

@@ -291,6 +291,12 @@
                             <h6>Exploring the K-Means Clustering Methodology</h6>
                         </div>
                         <div class="card-body ">
+                            <div id="loadingIndicator" style="display: none;">
+                                <p>Loading...</p>
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                             <!-- iteration 1..n -->
                             <!-- show centroids -->
                             <!-- show eculidean -->
@@ -340,7 +346,7 @@
             html += `<div class="text-center mt-5"><h5>Euclidean distances</h5></div>`;
             html += '<div class="table-responsive p-0 mb-4">';
             html += '<table class="table align-items-center mb-0">';
-            html += `<thead><tr><th>Centroid</th>${euclideans[0].slice(0, (euclideans[0].length - 1)).map((each, idx) => `<td>Distance C${idx + 1}</td>`).join('')}</tr></thead><tbody>`;
+            html += `<thead><tr><th>Label</th>${euclideans[0].slice(0, (euclideans[0].length - 1)).map((each, idx) => `<td>Distance C${idx + 1}</td>`).join('')}</tr></thead><tbody>`;
             euclideans.forEach(([label, ...distances]) => {
                 html += `<tr><td>${label}</td>${distances.map((each => `<td>${each}</td>`)).join('')}</tr>`;
             });
@@ -372,6 +378,8 @@
         };
 
         // Fetch data from the server
+        document.getElementById('loadingIndicator').style.display = 'block';
+
         fetch('http://localhost:5000/k-means')
             .then(response => {
                 if (!response.ok) {
@@ -380,7 +388,7 @@
                 return response.json();
             })
             .then(data => {
-                console.log(data)
+                document.getElementById('loadingIndicator').style.display = 'none';
                 displayData(data.result);
             })
             .catch(error => {

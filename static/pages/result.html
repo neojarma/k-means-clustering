@@ -298,6 +298,12 @@
                             <h6>Clustering Result</h6>
                         </div>
                         <div class="card-body ">
+                            <div id="loadingIndicator" style="display: none;">
+                                <p>Loading...</p>
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
                             <div id="iterationsBody"></div>
                             <div id="clusterImageContainer" style="display: none; text-align: center;">
                                 <img id="clusterImg" src="" alt="Cluster Plot">
@@ -346,7 +352,7 @@
             html += `<div class="text-center mt-5"><h5>Euclidean distances</h5></div>`;
             html += '<div class="table-responsive p-0 mb-4">';
             html += '<table class="table align-items-center mb-0">';
-            html += `<thead><tr><th>Centroid</th>${euclideans[0].slice(0, (euclideans[0].length - 1)).map((each, idx) => `<td>Distance C${idx + 1}</td>`).join('')}</tr></thead><tbody>`;
+            html += `<thead><tr><th>Label</th>${euclideans[0].slice(0, (euclideans[0].length - 1)).map((each, idx) => `<td>Distance C${idx + 1}</td>`).join('')}</tr></thead><tbody>`;
             euclideans.forEach(([label, ...distances]) => {
                 html += `<tr><td>${label}</td>${distances.map((each => `<td>${each}</td>`)).join('')}</tr>`;
             });
@@ -356,9 +362,9 @@
             html += `<div class="text-center mt-5"><h5>Clusters</h5></div>`;
             html += '<div class="table-responsive p-0 mb-4">';
             html += '<table class="table align-items-center mb-0">';
-            html += '<thead><tr><th>Label</th><th>Cluster</th></tr></thead><tbody>';
-            clusters.forEach(([label, cluster]) => {
-                html += `<tr><td>${label}</td><td>${cluster}</td></tr>`;
+            html += '<thead><tr><th>Desa</th><th>Nama</th><th>Cluster</th></tr></thead><tbody>';
+            clusters.forEach(([desa, nama, cluster]) => {
+                html += `<tr><td>${desa}</td><td>${nama}</td><td>${cluster}</td></tr>`;
             });
             html += '</tbody></table></div>';
             html += `<div style="border-bottom: 2px solid  #cb0c9f; margin: 10px 0 25px;"></div>`;
@@ -382,6 +388,8 @@
         };
 
         // Fetch data from the server
+        document.getElementById('loadingIndicator').style.display = 'block';
+
         fetch('http://localhost:5000/cluster')
             .then(response => {
                 if (!response.ok) {
@@ -390,6 +398,7 @@
                 return response.json();
             })
             .then(data => {
+                document.getElementById('loadingIndicator').style.display = 'none';
                 displayData(data.iterations, data.clusterPath);
             })
             .catch(error => {

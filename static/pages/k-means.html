@@ -177,6 +177,13 @@
                 </div>
                 <button type="button" class="btn btn-primary " onclick="uploadFile()">Upload</button>
               </form>
+              <div id="loadingIndicator" style="display: none;">
+                <p>Loading...</p>
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+
               <div class="mb-3" id="totalInfo" style="display: none;">
                 <p>Total Records: <span id="totalRecords">0</span></p>
                 <p>Total Columns: <span id="totalColumns">0</span></p>
@@ -187,6 +194,7 @@
                     <!-- Table headers will be dynamically generated here -->
                   </thead>
                   <tbody id="tableBody">
+
                     <!-- Table body will be populated here -->
                   </tbody>
                   <tbody id="excelData">
@@ -241,7 +249,7 @@
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
-
+        document.getElementById('loadingIndicator').style.display = 'block';
         fetch('http://localhost:5000/upload', {
           method: 'POST',
           body: formData
@@ -253,6 +261,7 @@
             return response.json()
           })
           .then(data => {
+            document.getElementById('loadingIndicator').style.display = 'none';
             const columns = data['columns'];
             const dataset = data['dataset'];
             const labels = data['labels'];
